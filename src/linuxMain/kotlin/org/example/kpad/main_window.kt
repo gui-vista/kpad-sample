@@ -15,6 +15,14 @@ private fun openBtnClicked(@Suppress("UNUSED_PARAMETER") widget: CPointer<GtkWid
     createOpenFileDialog(userData.reinterpret())
 }
 
+@Suppress("UNUSED_PARAMETER")
+private fun newBtnClicked(widget: CPointer<GtkWidget>, userData: gpointer) {
+    updateMainWindowTitle("KPad")
+    val buffer = gtk_text_view_get_buffer(editor?.reinterpret())
+    gtk_text_buffer_set_text(buffer = buffer, text = "", len = 0)
+    gtk_widget_grab_focus(editor)
+}
+
 internal fun updateMainWindowTitle(title: String) {
     gtk_window_set_title(win?.reinterpret(), title)
 }
@@ -81,14 +89,7 @@ private fun createToolbar(): CPointer<GtkToolbar> {
     val saveItem = gtk_tool_item_new()
     val toolItems = arrayOf(newItem, openItem, saveItem)
 
-    if (openBtn != null) {
-        connectGtkSignal(
-            obj = openBtn,
-            actionName = "clicked",
-            data = win,
-            action = staticCFunction(::openBtnClicked)
-        )
-    }
+    if (openBtn != null && newBtn != null) setupEvents(openBtn, newBtn)
     gtk_container_add(newItem?.reinterpret(), newBtn?.reinterpret())
     gtk_container_add(openItem?.reinterpret(), openBtn?.reinterpret())
     gtk_container_add(saveItem?.reinterpret(), saveBtn?.reinterpret())
@@ -96,4 +97,18 @@ private fun createToolbar(): CPointer<GtkToolbar> {
         gtk_toolbar_insert(toolbar.reinterpret(), ti?.reinterpret(), pos)
     }
     return toolbar.reinterpret()
+}
+
+private fun setupEvents(openBtn: CPointer<GtkWidget>, newBtn: CPointer<GtkWidget>) {
+    connectGtkSignal(
+        obj = openBtn,
+        actionName = "clicked",
+        data = win,
+        action = staticCFunction(::openBtnClicked)
+    )
+    connectGtkSignal(
+        obj = newBtn,
+        actionName = "clicked",
+        action = staticCFunction(::newBtnClicked)
+    )
 }
