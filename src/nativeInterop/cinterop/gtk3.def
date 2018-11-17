@@ -1,0 +1,4 @@
+headers = gtk/gtk.h gobject/gobject.h glib.h
+headerFilter = gtk/* gobject/* gio/* glib/* gdk-pixbuf/*
+compilerOpts.linux = -I/usr/include/gtk-3.0/gtk -I/usr/include/glib-2.0 -I/usr/include/glib-2.0/glib -I/usr/include/glib-2.0/gobject -I/usr/include/gdk-pixbuf-2.0/gdk-pixbuf
+linkerOpts.linux = -L/usr/lib/x86_64-linux-gnu -lgtk-3 -lgdk-3 -latk-1.0 -lgio-2.0 -lpangocairo-1.0 -lgdk_pixbuf-2.0 -lcairo-gobject -lpango-1.0 -lcairo -lgobject-2.0 -lglib-2.0

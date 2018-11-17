@@ -9,7 +9,16 @@ kotlin {
         // For ARM, preset should be changed to presets.iosArm32 or presets.iosArm64
         // For Linux, preset should be changed to e.g. presets.linuxX64
         // For MacOS, preset should be changed to e.g. presets.macosX64
-        fromPreset(presets.linuxX64, 'linux')
+        fromPreset(presets.linuxX64, 'linux') {
+            compilations.main.cinterops {
+                gtk3 {
+                    ['/usr/include'].each {
+                        includeDirs "$it/atk-1.0", "$it/gdk-pixbuf-2.0", "$it/cairo", "$it/pango-1.0", "$it/gtk-3.0", "$it/glib-2.0"
+                    }
+                    includeDirs '/usr/lib/x86_64-linux-gnu/glib-2.0/include'
+                }
+            }
+        }
 
         configure([linux]) {
             // Comment to generate Kotlin/Native library (KLIB) instead of executable file:

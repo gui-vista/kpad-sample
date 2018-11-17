@@ -7,5 +7,6 @@ pluginManagement {
         }
     }
 }
-rootProject.name = 'kpad'
 
+rootProject.name = 'kpad'
+enableFeaturePreview('GRADLE_METADATA')
