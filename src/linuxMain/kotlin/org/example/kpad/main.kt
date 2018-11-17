@@ -6,6 +6,14 @@ import gtk3.*
 import kotlinx.cinterop.*
 import platform.posix.*
 
+private var filePath: String = ""
+
+internal fun clearFilePath() {
+    filePath = ""
+}
+
+internal fun fetchFilePath() = filePath
+
 internal fun createOpenFileDialog(parent: CPointer<GtkWindow>) {
     val gtkStockCancel = "gtk-cancel"
     val gtkStockOpen = "gtk-open"
@@ -18,14 +26,57 @@ internal fun createOpenFileDialog(parent: CPointer<GtkWindow>) {
         variadicArguments = *dialogArgs
     )
     val resp = gtk_dialog_run(dialog?.reinterpret())
+
     if (resp == GTK_RESPONSE_ACCEPT) {
-        val filePath = gtk_file_chooser_get_filename(dialog?.reinterpret())?.toKString()!!
+        filePath = gtk_file_chooser_get_filename(dialog?.reinterpret())?.toKString()!!
         updateStatusBar("Opening $filePath...")
         updateEditor(filePath)
         updateMainWindowTitle("KPad - ${fileName(filePath)}")
-        updateStatusBar("Ready")
+        updateStatusBar("File opened")
     }
     gtk_widget_destroy(dialog)
+}
+
+internal fun textFromTextBuffer(buffer: CPointer<GtkTextBuffer>): String = memScoped {
+    val start = alloc<GtkTextIter>().ptr
+    val end = alloc<GtkTextIter>().ptr
+    gtk_text_buffer_get_start_iter(buffer, start)
+    gtk_text_buffer_get_end_iter(buffer, end)
+    return gtk_text_buffer_get_text(
+        buffer = buffer,
+        start = start,
+        end = end,
+        include_hidden_chars = FALSE
+    )?.toKString() ?: ""
+}
+
+internal fun createSaveFileDialog(parent: CPointer<GtkWindow>, buffer: CPointer<GtkTextBuffer>) {
+    val gtkStockCancel = "gtk-cancel"
+    val gtkStockSave = "gtk-save"
+    val dialogArgs = arrayOf(GTK_RESPONSE_CANCEL, gtkStockSave, GTK_RESPONSE_ACCEPT, null)
+    val dialog = gtk_file_chooser_dialog_new(
+        parent = parent,
+        title = "Save File",
+        first_button_text = gtkStockCancel,
+        action = GtkFileChooserAction.GTK_FILE_CHOOSER_ACTION_SAVE,
+        variadicArguments = *dialogArgs
+    )
+    val resp = gtk_dialog_run(dialog?.reinterpret())
+
+    if (resp == GTK_RESPONSE_ACCEPT) {
+        filePath = gtk_file_chooser_get_filename(dialog?.reinterpret())?.toKString()!!
+        updateStatusBar("Saving $filePath...")
+        updateMainWindowTitle("KPad - ${fileName(filePath)}")
+        saveFile(filePath, textFromTextBuffer(buffer))
+        updateStatusBar("File saved")
+    }
+    gtk_widget_destroy(dialog)
+}
+
+internal fun saveFile(filePath: String, txt: String): String = memScoped {
+    val error = alloc<CPointerVar<GError>>()
+    g_file_set_contents(filename = filePath, contents = txt, length = txt.length.toLong(), error = error.ptr)
+    return error.pointed?.message?.toKString() ?: ""
 }
 
 internal fun fileName(filePath: String): String = if ('/' in filePath && filePath.length >= 2) {
