@@ -56,7 +56,7 @@ internal fun activateMainWindow(
 }
 
 internal fun updateStatusBar(txt: String) {
-    gtk_statusbar_push(statusbar = statusBar?.reinterpret(), text = txt, context_id = 0)
+    gtk_statusbar_push(statusbar = statusBar?.reinterpret(), text = txt, context_id = 0u)
 }
 
 internal fun updateEditor(filePath: String) {
@@ -82,9 +82,9 @@ private fun createScrolledWindow(): CPointer<GtkScrolledWindow> {
     val scrolledWin = gtk_scrolled_window_new(null, null)!!
     val margins = mapOf("left" to 10, "right" to 10, "top" to 10)
     editor = gtk_text_view_new()
-    gtk_widget_set_margin_left(scrolledWin, margins["left"]!!)
-    gtk_widget_set_margin_right(scrolledWin, margins["right"]!!)
-    gtk_widget_set_margin_top(scrolledWin, margins["top"]!!)
+    gtk_widget_set_margin_left(scrolledWin, margins["left"] ?: 0)
+    gtk_widget_set_margin_right(scrolledWin, margins["right"] ?: 0)
+    gtk_widget_set_margin_top(scrolledWin, margins["top"] ?: 0)
     gtk_text_view_set_cursor_visible(editor?.reinterpret(), TRUE)
     gtk_container_add(scrolledWin.reinterpret(), editor)
     return scrolledWin.reinterpret()
@@ -92,7 +92,7 @@ private fun createScrolledWindow(): CPointer<GtkScrolledWindow> {
 
 private fun createStatusBar() {
     statusBar = gtk_statusbar_new()
-    gtk_statusbar_push(statusbar = statusBar?.reinterpret(), text = "Ready", context_id = 0)
+    gtk_statusbar_push(statusbar = statusBar?.reinterpret(), text = "Ready", context_id = 0u)
 }
 
 private fun createToolbar(): CPointer<GtkToolbar> {

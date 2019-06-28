@@ -150,7 +150,7 @@ internal fun readTextFile(filePath: String): String {
     memScoped {
         val buffer = allocArray<ByteVar>(size)
         // Read the entire file and store the contents into the buffer.
-        fread(buffer, size.toULong(), 1, file)
+        fread(buffer, size.toULong(), 1u, file)
         result = buffer.toKString()
     }
     fclose(file)
