@@ -3,6 +3,9 @@ plugins {
 }
 repositories {
     mavenCentral()
+    maven {
+        url = uri("https://dl.bintray.com/guivista/public")
+    }
 }
 
 kotlin {
@@ -24,6 +27,11 @@ kotlin {
                     "$headerDir/pango-1.0",
                     "$headerDir/gtk-3.0"
                 )
+            }
+
+            dependencies {
+                val guiVistaVer = "0.3.1"
+                implementation("org.guivista:guivista-gui:$guiVistaVer")
             }
         }
         binaries {

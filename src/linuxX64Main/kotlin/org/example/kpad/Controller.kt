@@ -1,6 +1,7 @@
 @file:Suppress("EXPERIMENTAL_UNSIGNED_LITERALS", "EXPERIMENTAL_API_USAGE")
 package org.example.kpad
 
+import glib2.*
 import gtk3.*
 import kotlinx.cinterop.*
 

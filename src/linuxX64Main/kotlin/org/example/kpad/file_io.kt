@@ -2,8 +2,8 @@
 
 package org.example.kpad
 
-import gtk3.GError
-import gtk3.g_file_set_contents
+import glib2.GError
+import glib2.g_file_set_contents
 import kotlinx.cinterop.*
 import platform.posix.*
 

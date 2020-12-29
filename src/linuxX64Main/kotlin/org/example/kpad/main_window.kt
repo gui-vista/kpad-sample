@@ -2,6 +2,8 @@
 
 package org.example.kpad
 
+import glib2.TRUE
+import glib2.gpointer
 import gtk3.*
 import kotlinx.cinterop.*
 
