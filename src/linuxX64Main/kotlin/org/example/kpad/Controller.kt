@@ -97,7 +97,7 @@ internal object Controller {
         title = "Open File",
         first_button_text = "gtk-cancel",
         action = GtkFileChooserAction.GTK_FILE_CHOOSER_ACTION_OPEN,
-        variadicArguments = *arrayOf(GTK_RESPONSE_CANCEL, "gtk-open", GTK_RESPONSE_ACCEPT, null)
+        variadicArguments = arrayOf(GTK_RESPONSE_CANCEL, "gtk-open", GTK_RESPONSE_ACCEPT, null)
     )
 
     fun showSaveDialog(parent: CPointer<GtkWindow>?, buffer: CPointer<GtkTextBuffer>?) {
@@ -120,6 +120,6 @@ internal object Controller {
         title = "Save File",
         first_button_text = "gtk-cancel",
         action = GtkFileChooserAction.GTK_FILE_CHOOSER_ACTION_SAVE,
-        variadicArguments = *arrayOf(GTK_RESPONSE_CANCEL, "gtk-save", GTK_RESPONSE_ACCEPT, null)
+        variadicArguments = arrayOf(GTK_RESPONSE_CANCEL, "gtk-save", GTK_RESPONSE_ACCEPT, null)
     )
 }
