@@ -4,11 +4,13 @@ package org.example.kpad
 import glib2.*
 import gtk3.*
 import kotlinx.cinterop.*
+import org.guiVista.gui.window.AppWindow
 
 @ThreadLocal
 internal object Controller {
     private var filePath = ""
-    val mainWin = MainWindow()
+    internal lateinit var appWin: AppWindow
+//    val mainWin = MainWindow()
 
     fun clearFilePath() {
         filePath = ""
@@ -83,10 +85,10 @@ internal object Controller {
         val resp = gtk_dialog_run(dialog?.reinterpret())
         if (resp == GTK_RESPONSE_ACCEPT) {
             filePath = gtk_file_chooser_get_filename(dialog?.reinterpret())?.toKString() ?: ""
-            with(mainWin) {
+            with(appWin as MainWindow) {
                 updateStatusBar("Opening $filePath...")
                 updateEditor(filePath)
-                updateMainWindowTitle("KPad - ${fileName(filePath)}")
+                title = "KPad - ${fileName(filePath)}"
                 updateStatusBar("File opened")
             }
         }
@@ -106,9 +108,9 @@ internal object Controller {
         val resp = gtk_dialog_run(dialog?.reinterpret())
         if (resp == GTK_RESPONSE_ACCEPT) {
             filePath = gtk_file_chooser_get_filename(dialog?.reinterpret())?.toKString() ?: ""
-            with(mainWin) {
+            with(appWin as MainWindow) {
                 updateStatusBar("Saving $filePath...")
-                updateMainWindowTitle("KPad - ${fileName(filePath)}")
+                title = "KPad - ${fileName(filePath)}"
                 saveFile(filePath, textFromTextBuffer(buffer))
                 updateStatusBar("File saved")
             }

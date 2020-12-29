@@ -8,11 +8,9 @@ import org.guiVista.core.fetchEmptyDataPointer
 import org.guiVista.gui.GuiApplication
 import org.guiVista.gui.window.AppWindow
 
-private lateinit var appWin: AppWindow
-
 fun main() {
     GuiApplication(id = "org.example.basicgui").use {
-        appWin = AppWindow(this)
+        Controller.appWin = AppWindow(this)
         connectActivateSignal(staticCFunction(::activateApplication), fetchEmptyDataPointer())
         println("Application Status: ${run()}")
     }
@@ -21,7 +19,7 @@ fun main() {
 @Suppress("UNUSED_PARAMETER")
 private fun activateApplication(app: CPointer<GApplication>, userData: gpointer) {
     println("Application ID: ${GuiApplication(appPtr = app).appId}")
-    appWin.createUi {
+    Controller.appWin.createUi {
         changeDefaultSize(width = 600, height = 400)
         title = "KPad"
         visible = true
