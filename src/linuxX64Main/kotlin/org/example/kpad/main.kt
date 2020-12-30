@@ -6,11 +6,10 @@ import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.staticCFunction
 import org.guiVista.core.fetchEmptyDataPointer
 import org.guiVista.gui.GuiApplication
-import org.guiVista.gui.window.AppWindow
 
 fun main() {
-    GuiApplication(id = "org.example.basicgui").use {
-        Controller.appWin = AppWindow(this)
+    GuiApplication(id = "org.example.kpad").use {
+        Controller.appWin = MainWindow(this)
         connectActivateSignal(staticCFunction(::activateApplication), fetchEmptyDataPointer())
         println("Application Status: ${run()}")
     }
