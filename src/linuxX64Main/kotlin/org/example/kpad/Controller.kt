@@ -4,6 +4,9 @@ package org.example.kpad
 import glib2.*
 import gtk3.*
 import kotlinx.cinterop.*
+import org.guiVista.gui.text.TextBuffer
+import org.guiVista.gui.text.TextBufferIterator
+import org.guiVista.gui.window.WindowBase
 
 @ThreadLocal
 internal object Controller {
@@ -16,20 +19,20 @@ internal object Controller {
 
     fun fetchFilePath() = filePath
 
-    fun textFromTextBuffer(buffer: CPointer<GtkTextBuffer>?): String = memScoped {
-        val start = alloc<GtkTextIter>().ptr
-        val end = alloc<GtkTextIter>().ptr
-        gtk_text_buffer_get_start_iter(buffer, start)
-        gtk_text_buffer_get_end_iter(buffer, end)
+    fun textFromTextBuffer(buffer: TextBuffer): String {
+        val start = TextBufferIterator()
+        val end = TextBufferIterator()
+        buffer.fetchStartIterator(start)
+        buffer.fetchEndIterator(end)
         return gtk_text_buffer_get_text(
-            buffer = buffer,
-            start = start,
-            end = end,
+            buffer = buffer.gtkTextBufferPtr,
+            start = start.gtkTextIterPtr,
+            end = end.gtkTextIterPtr,
             include_hidden_chars = FALSE
         )?.toKString() ?: ""
     }
 
-    fun showOpenDialog(parent: CPointer<GtkWindow>?) {
+    fun showOpenDialog(parent: WindowBase) {
         val dialog = createOpenDialog(parent)
         val resp = gtk_dialog_run(dialog?.reinterpret())
         if (resp == GTK_RESPONSE_ACCEPT) {
@@ -44,15 +47,15 @@ internal object Controller {
         gtk_widget_destroy(dialog)
     }
 
-    private fun createOpenDialog(parent: CPointer<GtkWindow>?) = gtk_file_chooser_dialog_new(
-        parent = parent,
+    private fun createOpenDialog(parent: WindowBase) = gtk_file_chooser_dialog_new(
+        parent = parent.gtkWindowPtr,
         title = "Open File",
         first_button_text = "gtk-cancel",
         action = GtkFileChooserAction.GTK_FILE_CHOOSER_ACTION_OPEN,
         variadicArguments = arrayOf(GTK_RESPONSE_CANCEL, "gtk-open", GTK_RESPONSE_ACCEPT, null)
     )
 
-    fun showSaveDialog(parent: CPointer<GtkWindow>?, buffer: CPointer<GtkTextBuffer>?) {
+    fun showSaveDialog(parent: WindowBase, buffer: TextBuffer) {
         val dialog = createSaveDialog(parent)
         val resp = gtk_dialog_run(dialog?.reinterpret())
         if (resp == GTK_RESPONSE_ACCEPT) {
@@ -67,8 +70,8 @@ internal object Controller {
         gtk_widget_destroy(dialog)
     }
 
-    private fun createSaveDialog(parent: CPointer<GtkWindow>?) = gtk_file_chooser_dialog_new(
-        parent = parent,
+    private fun createSaveDialog(parent: WindowBase) = gtk_file_chooser_dialog_new(
+        parent = parent.gtkWindowPtr,
         title = "Save File",
         first_button_text = "gtk-cancel",
         action = GtkFileChooserAction.GTK_FILE_CHOOSER_ACTION_SAVE,

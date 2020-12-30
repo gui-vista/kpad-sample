@@ -19,15 +19,11 @@ import org.guiVista.gui.window.AppWindow
 
 internal class MainWindow(app: GuiApplication) : AppWindow(app) {
     private val editor by lazy { createEditor() }
+    val buffer
+        get() = editor.buffer
     private val statusBar by lazy { createStatusBar() }
     private val toolBar by lazy { createToolbar() }
-    val textBufferPtr
-        get() = editor.buffer.gtkTextBufferPtr
     val stableRef = StableRef.create(this)
-
-    fun changeEditorText(txt: String) {
-        editor.buffer.changeText(txt)
-    }
 
     override fun resetFocus() {
         editor.grabFocus()
@@ -94,10 +90,10 @@ private fun saveItemClicked(
     val mainWin = userData.asStableRef<MainWindow>().get()
     val filePath = Controller.fetchFilePath()
     if (filePath.isEmpty()) {
-        Controller.showSaveDialog(mainWin.gtkWindowPtr, mainWin.textBufferPtr)
+        Controller.showSaveDialog(mainWin, mainWin.buffer)
     } else {
         mainWin.updateStatusBar("Saving $filePath...")
-        saveFile(filePath, Controller.textFromTextBuffer(mainWin.textBufferPtr))
+        saveFile(filePath, Controller.textFromTextBuffer(mainWin.buffer))
         mainWin.updateStatusBar("File saved")
         mainWin.resetFocus()
     }
@@ -108,7 +104,7 @@ private fun openItemClicked(
     userData: gpointer
 ) {
     val mainWin = userData.asStableRef<MainWindow>().get()
-    Controller.showOpenDialog(mainWin.gtkWindowPtr)
+    Controller.showOpenDialog(mainWin)
 }
 
 fun newItemClicked(
@@ -118,7 +114,7 @@ fun newItemClicked(
     val mainWin = userData.asStableRef<MainWindow>().get()
     with(mainWin) {
         title = "KPad"
-        changeEditorText("")
+        buffer.changeText("")
         Controller.clearFilePath()
         updateStatusBar("Ready")
         resetFocus()
