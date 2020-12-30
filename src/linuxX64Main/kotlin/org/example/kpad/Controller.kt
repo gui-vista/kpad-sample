@@ -4,68 +4,17 @@ package org.example.kpad
 import glib2.*
 import gtk3.*
 import kotlinx.cinterop.*
-import org.guiVista.gui.window.AppWindow
 
 @ThreadLocal
 internal object Controller {
     private var filePath = ""
-    internal lateinit var appWin: AppWindow
-//    val mainWin = MainWindow()
+    internal lateinit var mainWin: MainWindow
 
     fun clearFilePath() {
         filePath = ""
     }
 
     fun fetchFilePath() = filePath
-
-    /**
-     * Connects a signal (event) to a slot (event handler). Note that all callback parameters must be primitive types or
-     * nullable C pointers.
-     */
-    fun <F : CFunction<*>> connectGtkSignal(
-        obj: CPointer<*>,
-        actionName: String,
-        action: CPointer<F>,
-        data: gpointer? = null,
-        connectFlags: GConnectFlags = 0u
-    ) {
-        g_signal_connect_data(
-            instance = obj.reinterpret(),
-            detailed_signal = actionName,
-            c_handler = action.reinterpret(),
-            data = data,
-            destroy_data = null,
-            connect_flags = connectFlags
-        )
-    }
-
-    fun addWidgetToBoxFromTop(
-        box: CPointer<GtkBox>?,
-        widget: CPointer<GtkWidget>?,
-        fill: Boolean = true,
-        expand: Boolean = false,
-        padding: UInt = 0u
-    ): Unit = gtk_box_pack_start(
-        box = box,
-        child = widget,
-        expand = if (expand) TRUE else FALSE,
-        fill = if (fill) TRUE else FALSE,
-        padding = padding
-    )
-
-    fun addWidgetToBoxFromBottom(
-        box: CPointer<GtkBox>?,
-        widget: CPointer<GtkWidget>?,
-        fill: Boolean = true,
-        expand: Boolean = false,
-        padding: UInt = 0u
-    ): Unit = gtk_box_pack_end(
-        box = box,
-        child = widget,
-        expand = if (expand) TRUE else FALSE,
-        fill = if (fill) TRUE else FALSE,
-        padding = padding
-    )
 
     fun textFromTextBuffer(buffer: CPointer<GtkTextBuffer>?): String = memScoped {
         val start = alloc<GtkTextIter>().ptr
@@ -85,7 +34,7 @@ internal object Controller {
         val resp = gtk_dialog_run(dialog?.reinterpret())
         if (resp == GTK_RESPONSE_ACCEPT) {
             filePath = gtk_file_chooser_get_filename(dialog?.reinterpret())?.toKString() ?: ""
-            with(appWin as MainWindow) {
+            with(mainWin) {
                 updateStatusBar("Opening $filePath...")
                 updateEditor(filePath)
                 title = "KPad - ${fileName(filePath)}"
@@ -108,7 +57,7 @@ internal object Controller {
         val resp = gtk_dialog_run(dialog?.reinterpret())
         if (resp == GTK_RESPONSE_ACCEPT) {
             filePath = gtk_file_chooser_get_filename(dialog?.reinterpret())?.toKString() ?: ""
-            with(appWin as MainWindow) {
+            with(mainWin) {
                 updateStatusBar("Saving $filePath...")
                 title = "KPad - ${fileName(filePath)}"
                 saveFile(filePath, textFromTextBuffer(buffer))

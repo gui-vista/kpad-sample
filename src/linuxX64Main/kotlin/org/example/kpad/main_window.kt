@@ -13,7 +13,6 @@ import org.guiVista.gui.widget.display.statusBarWidget
 import org.guiVista.gui.widget.textEditor.textViewWidget
 import org.guiVista.gui.widget.tool.ToolBar
 import org.guiVista.gui.widget.tool.item.ToolButton
-import org.guiVista.gui.widget.tool.item.ToolItem
 import org.guiVista.gui.widget.tool.item.toolButtonWidget
 import org.guiVista.gui.widget.tool.toolBarWidget
 import org.guiVista.gui.window.AppWindow
@@ -82,12 +81,16 @@ internal class MainWindow(app: GuiApplication) : AppWindow(app) {
     }
 
     private fun setupToolButtonEvents(openItem: ToolButton, newItem: ToolButton, saveItem: ToolButton) {
-        // TODO: Setup events for tool items.
+        openItem.connectClickedSignal(staticCFunction(::openItemClicked), stableRef.asCPointer())
+        newItem.connectClickedSignal(staticCFunction(::newItemClicked), stableRef.asCPointer())
+        saveItem.connectClickedSignal(staticCFunction(::saveItemClicked), stableRef.asCPointer())
     }
 }
 
-@Suppress("UNUSED_PARAMETER")
-private fun saveItemClicked(widget: CPointer<GtkButton>?, userData: gpointer) {
+private fun saveItemClicked(
+    @Suppress("UNUSED_PARAMETER") toolBtn: CPointer<GtkToolButton>?,
+    userData: gpointer
+) {
     val mainWin = userData.asStableRef<MainWindow>().get()
     val filePath = Controller.fetchFilePath()
     if (filePath.isEmpty()) {
@@ -100,13 +103,18 @@ private fun saveItemClicked(widget: CPointer<GtkButton>?, userData: gpointer) {
     }
 }
 
-private fun openBtnClicked(@Suppress("UNUSED_PARAMETER") widget: CPointer<GtkButton>?, userData: gpointer) {
+private fun openItemClicked(
+    @Suppress("UNUSED_PARAMETER") toolBtn: CPointer<GtkToolButton>?,
+    userData: gpointer
+) {
     val mainWin = userData.asStableRef<MainWindow>().get()
     Controller.showOpenDialog(mainWin.gtkWindowPtr)
 }
 
-@Suppress("UNUSED_PARAMETER")
-fun newBtnClicked(widget: CPointer<GtkButton>?, userData: gpointer) {
+fun newItemClicked(
+    @Suppress("UNUSED_PARAMETER") toolBtn: CPointer<GtkToolButton>?,
+    userData: gpointer
+) {
     val mainWin = userData.asStableRef<MainWindow>().get()
     with(mainWin) {
         title = "KPad"
