@@ -30,7 +30,7 @@ kotlin {
             }
 
             dependencies {
-                val guiVistaVer = "0.3.1"
+                val guiVistaVer = "0.3.2"
                 implementation("org.guivista:guivista-gui:$guiVistaVer")
             }
         }

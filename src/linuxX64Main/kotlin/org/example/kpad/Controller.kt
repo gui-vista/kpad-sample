@@ -1,7 +1,6 @@
 @file:Suppress("EXPERIMENTAL_UNSIGNED_LITERALS", "EXPERIMENTAL_API_USAGE")
 package org.example.kpad
 
-import glib2.*
 import gtk3.*
 import kotlinx.cinterop.*
 import org.guiVista.gui.text.TextBuffer
@@ -24,12 +23,7 @@ internal object Controller {
         val end = TextBufferIterator()
         buffer.fetchStartIterator(start)
         buffer.fetchEndIterator(end)
-        return gtk_text_buffer_get_text(
-            buffer = buffer.gtkTextBufferPtr,
-            start = start.gtkTextIterPtr,
-            end = end.gtkTextIterPtr,
-            include_hidden_chars = FALSE
-        )?.toKString() ?: ""
+        return buffer.fetchText(start = start, end = end, includeHiddenChars = false)
     }
 
     fun showOpenDialog(parent: WindowBase) {

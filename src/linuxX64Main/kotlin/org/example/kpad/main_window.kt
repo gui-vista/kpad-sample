@@ -3,12 +3,16 @@
 package org.example.kpad
 
 import glib2.gpointer
-import gtk3.*
-import kotlinx.cinterop.*
+import gtk3.GtkOrientation
+import gtk3.GtkPolicyType
+import gtk3.GtkToolButton
+import kotlinx.cinterop.CPointer
+import kotlinx.cinterop.StableRef
+import kotlinx.cinterop.asStableRef
+import kotlinx.cinterop.staticCFunction
 import org.guiVista.gui.GuiApplication
 import org.guiVista.gui.layout.Container
 import org.guiVista.gui.layout.boxLayout
-import org.guiVista.gui.widget.Widget
 import org.guiVista.gui.widget.display.statusBarWidget
 import org.guiVista.gui.widget.textEditor.textViewWidget
 import org.guiVista.gui.widget.tool.ToolBar
@@ -16,6 +20,7 @@ import org.guiVista.gui.widget.tool.item.ToolButton
 import org.guiVista.gui.widget.tool.item.toolButtonWidget
 import org.guiVista.gui.widget.tool.toolBarWidget
 import org.guiVista.gui.window.AppWindow
+import org.guiVista.gui.window.ScrolledWindow
 
 internal class MainWindow(app: GuiApplication) : AppWindow(app) {
     private val editor by lazy { createEditor() }
@@ -30,9 +35,9 @@ internal class MainWindow(app: GuiApplication) : AppWindow(app) {
     }
 
     private fun createEditor() = textViewWidget {
-        val margins = mapOf("left" to 10, "right" to 10, "top" to 10)
-        marginStart = margins["left"] ?: 0
-        marginEnd = margins["right"] ?: 0
+        val margins = mapOf("start" to 10, "end" to 10, "top" to 10)
+        marginStart = margins["start"] ?: 0
+        marginEnd = margins["end"] ?: 0
         marginTop = margins["top"] ?: 0
         cursorVisible = true
     }
@@ -47,19 +52,21 @@ internal class MainWindow(app: GuiApplication) : AppWindow(app) {
     }
 
     override fun createMainLayout(): Container = boxLayout(orientation = GtkOrientation.GTK_ORIENTATION_VERTICAL) {
-        val scrolledWin = createScrolledWindow()
         spacing = 5
         prependChild(toolBar)
-        if (scrolledWin != null) {
-            prependChild(child = Widget(widgetPtr = scrolledWin.reinterpret()), fill = true, expand = true)
-        }
+        prependChild(child = createScrolledWindow(), fill = true, expand = true)
         appendChild(statusBar)
     }
 
-    private fun createScrolledWindow(): CPointer<GtkScrolledWindow>? {
-        val scrolledWin = gtk_scrolled_window_new(null, null)
-        gtk_container_add(scrolledWin?.reinterpret(), editor.gtkWidgetPtr)
-        return scrolledWin?.reinterpret()
+    private fun createScrolledWindow() = ScrolledWindow().apply {
+        // Using add instead of addChild to avoid the, "Attempting to add a widget with type GtkBox to a
+        // GtkApplicationWindow, but as a GtkBin subclass a GtkApplicationWindow can only contain one widget at a
+        // time" warning.
+        add(editor)
+        // Disable the infamous Overlay scrollbars.
+        overlayScrolling = false
+        // Always show vertical, and horizontal scrollbars.
+        changePolicy(GtkPolicyType.GTK_POLICY_ALWAYS, GtkPolicyType.GTK_POLICY_ALWAYS)
     }
 
     private fun createStatusBar() = statusBarWidget { push(0u, "Ready") }
