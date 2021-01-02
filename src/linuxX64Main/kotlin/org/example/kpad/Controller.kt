@@ -1,8 +1,10 @@
 @file:Suppress("EXPERIMENTAL_UNSIGNED_LITERALS", "EXPERIMENTAL_API_USAGE")
 package org.example.kpad
 
-import gtk3.*
-import kotlinx.cinterop.*
+import gtk3.GTK_RESPONSE_ACCEPT
+import gtk3.GTK_RESPONSE_CANCEL
+import gtk3.GtkFileChooserAction
+import org.guiVista.gui.dialog.fileChooserDialog
 import org.guiVista.gui.text.TextBuffer
 import org.guiVista.gui.text.TextBufferIterator
 import org.guiVista.gui.window.WindowBase
@@ -28,9 +30,9 @@ internal object Controller {
 
     fun showOpenDialog(parent: WindowBase) {
         val dialog = createOpenDialog(parent)
-        val resp = gtk_dialog_run(dialog?.reinterpret())
+        val resp = dialog.run()
         if (resp == GTK_RESPONSE_ACCEPT) {
-            filePath = gtk_file_chooser_get_filename(dialog?.reinterpret())?.toKString() ?: ""
+            filePath = dialog.fetchFileName()
             with(mainWin) {
                 updateStatusBar("Opening $filePath...")
                 updateEditor(filePath)
@@ -38,22 +40,24 @@ internal object Controller {
                 updateStatusBar("File opened")
             }
         }
-        gtk_widget_destroy(dialog)
+        dialog.close()
     }
 
-    private fun createOpenDialog(parent: WindowBase) = gtk_file_chooser_dialog_new(
-        parent = parent.gtkWindowPtr,
+    private fun createOpenDialog(parent: WindowBase) = fileChooserDialog(
+        parent = parent,
         title = "Open File",
-        first_button_text = "gtk-cancel",
-        action = GtkFileChooserAction.GTK_FILE_CHOOSER_ACTION_OPEN,
-        variadicArguments = arrayOf(GTK_RESPONSE_CANCEL, "gtk-open", GTK_RESPONSE_ACCEPT, null)
-    )
+        firstButtonText = "gtk-cancel",
+        firstButtonResponseId = GTK_RESPONSE_CANCEL,
+        action = GtkFileChooserAction.GTK_FILE_CHOOSER_ACTION_OPEN
+    ) {
+        addButton("gtk-open", GTK_RESPONSE_ACCEPT)
+    }
 
     fun showSaveDialog(parent: WindowBase, buffer: TextBuffer) {
         val dialog = createSaveDialog(parent)
-        val resp = gtk_dialog_run(dialog?.reinterpret())
+        val resp = dialog.run()
         if (resp == GTK_RESPONSE_ACCEPT) {
-            filePath = gtk_file_chooser_get_filename(dialog?.reinterpret())?.toKString() ?: ""
+            filePath = dialog.fetchFileName()
             with(mainWin) {
                 updateStatusBar("Saving $filePath...")
                 title = "KPad - ${fileName(filePath)}"
@@ -61,14 +65,16 @@ internal object Controller {
                 updateStatusBar("File saved")
             }
         }
-        gtk_widget_destroy(dialog)
+        dialog.close()
     }
 
-    private fun createSaveDialog(parent: WindowBase) = gtk_file_chooser_dialog_new(
-        parent = parent.gtkWindowPtr,
+    private fun createSaveDialog(parent: WindowBase) = fileChooserDialog(
+        parent = parent,
         title = "Save File",
-        first_button_text = "gtk-cancel",
-        action = GtkFileChooserAction.GTK_FILE_CHOOSER_ACTION_SAVE,
-        variadicArguments = arrayOf(GTK_RESPONSE_CANCEL, "gtk-save", GTK_RESPONSE_ACCEPT, null)
-    )
+        firstButtonText = "gtk-cancel",
+        firstButtonResponseId = GTK_RESPONSE_CANCEL,
+        action = GtkFileChooserAction.GTK_FILE_CHOOSER_ACTION_SAVE
+    ) {
+        addButton("gtk-save", GTK_RESPONSE_ACCEPT)
+    }
 }
