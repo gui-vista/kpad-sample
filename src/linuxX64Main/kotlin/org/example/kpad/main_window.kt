@@ -46,11 +46,6 @@ internal class MainWindow(app: GuiApplication) : AppWindow(app) {
         statusBar.push(0u, txt)
     }
 
-    fun updateEditor(filePath: String) {
-        editor.buffer.changeText(readTextFile(filePath))
-        resetFocus()
-    }
-
     override fun createMainLayout(): Container = boxLayout(orientation = GtkOrientation.GTK_ORIENTATION_VERTICAL) {
         spacing = 5
         prependChild(toolBar)
