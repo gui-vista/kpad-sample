@@ -7,7 +7,7 @@ import glib2.g_file_set_contents
 import kotlinx.cinterop.*
 import platform.posix.*
 
-fun saveFile(filePath: String, txt: String): String = memScoped {
+fun writeTextToFile(filePath: String, txt: String): String = memScoped {
     val error = alloc<CPointerVar<GError>>()
     g_file_set_contents(filename = filePath, contents = txt, length = txt.length.toLong(), error = error.ptr)
     return error.pointed?.message?.toKString() ?: ""

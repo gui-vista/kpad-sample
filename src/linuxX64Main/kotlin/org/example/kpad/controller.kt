@@ -19,7 +19,7 @@ import kotlin.native.concurrent.AtomicReference
 import kotlin.native.concurrent.freeze
 
 private val filePath = AtomicReference("")
-private val tempTxt = AtomicReference("")
+private val txtBuffer = AtomicReference("")
 
 @ThreadLocal
 internal object Controller {
@@ -30,6 +30,12 @@ internal object Controller {
     }
 
     fun fetchFilePath() = filePath.value
+
+    fun changeTxtBuffer(txt: String) {
+        txtBuffer.value = txt
+    }
+
+    fun fetchTxtBuffer() = txtBuffer.value
 
     fun textFromTextBuffer(buffer: TextBuffer): String {
         val start = TextBufferIterator()
@@ -44,7 +50,7 @@ internal object Controller {
         val resp = dialog.run()
         if (resp == GTK_RESPONSE_ACCEPT) {
             filePath.value = dialog.fetchFileName().freeze()
-            mainWin.updateStatusBar("Opening $filePath...")
+            mainWin.updateStatusBar("Opening ${filePath.value}...")
             runOnBackgroundThread(staticCFunction(::openFile))
         }
         dialog.close()
@@ -64,13 +70,10 @@ internal object Controller {
         val dialog = createSaveDialog(parent)
         val resp = dialog.run()
         if (resp == GTK_RESPONSE_ACCEPT) {
-            filePath.value = dialog.fetchFileName()
-            with(mainWin) {
-                updateStatusBar("Saving $filePath...")
-                title = "KPad - ${fileName(filePath.value)}"
-                saveFile(filePath.value, textFromTextBuffer(buffer))
-                updateStatusBar("File saved")
-            }
+            filePath.value = dialog.fetchFileName().freeze()
+            mainWin.updateStatusBar("Saving ${filePath.value}...")
+            txtBuffer.value = textFromTextBuffer(buffer).freeze()
+            runOnBackgroundThread(staticCFunction(::saveFile))
         }
         dialog.close()
     }
@@ -84,13 +87,26 @@ internal object Controller {
     ) {
         addButton("gtk-save", GTK_RESPONSE_ACCEPT)
     }
+
+    fun runOnBackgroundThread(
+        func: CPointer<CFunction<(COpaquePointer?) -> COpaquePointer?>>,
+        userData: COpaquePointer? = null
+    ): pthread_t {
+        val thread = memScoped { alloc<pthread_tVar>() }
+        pthread_create(thread.ptr, null, func, userData)
+        return thread.value
+    }
+
+    fun runOnUiThread(func: CPointer<CFunction<(COpaquePointer?) -> Int>>, userData: COpaquePointer? = null) {
+        gdk_threads_add_idle(func, userData)
+    }
 }
 
 private fun openFile(@Suppress("UNUSED_PARAMETER") userData: COpaquePointer?): COpaquePointer? {
     initRuntimeIfNeeded()
-    tempTxt.value = readTextFile(filePath.value).freeze()
-    runOnUiThread(staticCFunction { _: COpaquePointer? ->
-        Controller.mainWin.buffer.changeText(tempTxt.value)
+    txtBuffer.value = readTextFile(filePath.value).freeze()
+    Controller.runOnUiThread(staticCFunction { _: COpaquePointer? ->
+        Controller.mainWin.buffer.changeText(txtBuffer.value)
         Controller.mainWin.title = "KPad - ${fileName(filePath.value)}"
         Controller.mainWin.updateStatusBar("File opened")
         Controller.mainWin.resetFocus()
@@ -99,15 +115,13 @@ private fun openFile(@Suppress("UNUSED_PARAMETER") userData: COpaquePointer?): C
     return null
 }
 
-private fun runOnBackgroundThread(
-    func: CPointer<CFunction<(COpaquePointer?) -> COpaquePointer?>>?,
-    userData: COpaquePointer? = null
-): pthread_t {
-    val thread = memScoped { alloc<pthread_tVar>() }
-    pthread_create(thread.ptr, null, func, userData)
-    return thread.value
-}
-
-private fun runOnUiThread(func: CPointer<CFunction<(COpaquePointer?) -> Int>>?, userData: COpaquePointer? = null) {
-    gdk_threads_add_idle(func, userData)
+private fun saveFile(@Suppress("UNUSED_PARAMETER") userData: COpaquePointer?): COpaquePointer? {
+    initRuntimeIfNeeded()
+    writeTextToFile(filePath.value, txtBuffer.value)
+    Controller.runOnUiThread(staticCFunction { _: COpaquePointer? ->
+        Controller.mainWin.title = "KPad - ${fileName(filePath.value)}"
+        Controller.mainWin.updateStatusBar("File saved")
+        FALSE
+    })
+    return null
 }

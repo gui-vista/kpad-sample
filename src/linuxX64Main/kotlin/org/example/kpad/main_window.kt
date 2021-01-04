@@ -2,14 +2,12 @@
 
 package org.example.kpad
 
+import glib2.FALSE
 import glib2.gpointer
 import gtk3.GtkOrientation
 import gtk3.GtkPolicyType
 import gtk3.GtkToolButton
-import kotlinx.cinterop.CPointer
-import kotlinx.cinterop.StableRef
-import kotlinx.cinterop.asStableRef
-import kotlinx.cinterop.staticCFunction
+import kotlinx.cinterop.*
 import org.guiVista.gui.GuiApplication
 import org.guiVista.gui.layout.Container
 import org.guiVista.gui.layout.boxLayout
@@ -21,6 +19,7 @@ import org.guiVista.gui.widget.tool.item.toolButtonWidget
 import org.guiVista.gui.widget.tool.toolBarWidget
 import org.guiVista.gui.window.AppWindow
 import org.guiVista.gui.window.ScrolledWindow
+import kotlin.native.concurrent.freeze
 
 internal class MainWindow(app: GuiApplication) : AppWindow(app) {
     private val editor by lazy { createEditor() }
@@ -85,6 +84,17 @@ internal class MainWindow(app: GuiApplication) : AppWindow(app) {
     }
 }
 
+private fun saveFile(@Suppress("UNUSED_PARAMETER") userData: COpaquePointer?): COpaquePointer? {
+    initRuntimeIfNeeded()
+    writeTextToFile(Controller.fetchFilePath(), Controller.fetchTxtBuffer())
+    Controller.runOnUiThread(staticCFunction{ _: COpaquePointer? ->
+        Controller.mainWin.updateStatusBar("File saved")
+        Controller.mainWin.resetFocus()
+        FALSE
+    })
+    return null
+}
+
 private fun saveItemClicked(
     @Suppress("UNUSED_PARAMETER") toolBtn: CPointer<GtkToolButton>?,
     userData: gpointer
@@ -95,9 +105,8 @@ private fun saveItemClicked(
         Controller.showSaveDialog(mainWin, mainWin.buffer)
     } else {
         mainWin.updateStatusBar("Saving $filePath...")
-        saveFile(filePath, Controller.textFromTextBuffer(mainWin.buffer))
-        mainWin.updateStatusBar("File saved")
-        mainWin.resetFocus()
+        Controller.changeTxtBuffer(Controller.textFromTextBuffer(mainWin.buffer).freeze())
+        Controller.runOnBackgroundThread(staticCFunction(::saveFile))
     }
 }
 
