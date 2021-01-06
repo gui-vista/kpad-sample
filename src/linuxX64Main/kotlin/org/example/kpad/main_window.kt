@@ -8,6 +8,7 @@ import gtk3.GtkOrientation
 import gtk3.GtkPolicyType
 import gtk3.GtkToolButton
 import kotlinx.cinterop.*
+import org.guiVista.core.fetchEmptyDataPointer
 import org.guiVista.gui.GuiApplication
 import org.guiVista.gui.layout.Container
 import org.guiVista.gui.layout.boxLayout
@@ -27,7 +28,6 @@ internal class MainWindow(app: GuiApplication) : AppWindow(app) {
         get() = editor.buffer
     private val statusBar by lazy { createStatusBar() }
     private val toolBar by lazy { createToolbar() }
-    val stableRef = StableRef.create(this)
 
     override fun resetFocus() {
         editor.grabFocus()
@@ -78,9 +78,9 @@ internal class MainWindow(app: GuiApplication) : AppWindow(app) {
     }
 
     private fun setupToolButtonEvents(openItem: ToolButton, newItem: ToolButton, saveItem: ToolButton) {
-        openItem.connectClickedSignal(staticCFunction(::openItemClicked), stableRef.asCPointer())
-        newItem.connectClickedSignal(staticCFunction(::newItemClicked), stableRef.asCPointer())
-        saveItem.connectClickedSignal(staticCFunction(::saveItemClicked), stableRef.asCPointer())
+        openItem.connectClickedSignal(staticCFunction(::openItemClicked), fetchEmptyDataPointer())
+        newItem.connectClickedSignal(staticCFunction(::newItemClicked), fetchEmptyDataPointer())
+        saveItem.connectClickedSignal(staticCFunction(::saveItemClicked), fetchEmptyDataPointer())
     }
 }
 
@@ -97,33 +97,30 @@ private fun saveFile(@Suppress("UNUSED_PARAMETER") userData: COpaquePointer?): C
 
 private fun saveItemClicked(
     @Suppress("UNUSED_PARAMETER") toolBtn: CPointer<GtkToolButton>?,
-    userData: gpointer
+    @Suppress("UNUSED_PARAMETER") userData: gpointer
 ) {
-    val mainWin = userData.asStableRef<MainWindow>().get()
     val filePath = Controller.fetchFilePath()
     if (filePath.isEmpty()) {
-        Controller.showSaveDialog(mainWin, mainWin.buffer)
+        Controller.showSaveDialog(Controller.mainWin, Controller.mainWin.buffer)
     } else {
-        mainWin.updateStatusBar("Saving $filePath...")
-        Controller.changeTxtBuffer(Controller.textFromTextBuffer(mainWin.buffer).freeze())
+        Controller.mainWin.updateStatusBar("Saving $filePath...")
+        Controller.changeTxtBuffer(Controller.textFromTextBuffer(Controller.mainWin.buffer).freeze())
         Controller.runOnBackgroundThread(staticCFunction(::saveFile))
     }
 }
 
 private fun openItemClicked(
     @Suppress("UNUSED_PARAMETER") toolBtn: CPointer<GtkToolButton>?,
-    userData: gpointer
+    @Suppress("UNUSED_PARAMETER") userData: gpointer
 ) {
-    val mainWin = userData.asStableRef<MainWindow>().get()
-    Controller.showOpenDialog(mainWin)
+    Controller.showOpenDialog(Controller.mainWin)
 }
 
 fun newItemClicked(
     @Suppress("UNUSED_PARAMETER") toolBtn: CPointer<GtkToolButton>?,
-    userData: gpointer
+    @Suppress("UNUSED_PARAMETER") userData: gpointer
 ) {
-    val mainWin = userData.asStableRef<MainWindow>().get()
-    with(mainWin) {
+    with(Controller.mainWin) {
         title = "KPad"
         buffer.changeText("")
         Controller.clearFilePath()

@@ -12,7 +12,6 @@ fun main() {
         Controller.mainWin = MainWindow(this)
         connectActivateSignal(staticCFunction(::activateApplication), fetchEmptyDataPointer())
         println("Application Status: ${run()}")
-        Controller.mainWin.stableRef.dispose()
     }
 }
 
