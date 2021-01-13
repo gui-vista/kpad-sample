@@ -23,4 +23,5 @@ private fun activateApplication(app: CPointer<GApplication>, userData: gpointer)
         title = "KPad"
         visible = true
     }
+    Controller.setupMainWindowEvents()
 }

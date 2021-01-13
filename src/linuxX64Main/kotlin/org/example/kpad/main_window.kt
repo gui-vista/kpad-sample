@@ -2,19 +2,18 @@
 
 package org.example.kpad
 
-import glib2.FALSE
 import glib2.gpointer
 import gtk3.GtkOrientation
 import gtk3.GtkPolicyType
 import gtk3.GtkToolButton
-import kotlinx.cinterop.*
+import kotlinx.cinterop.CPointer
+import kotlinx.cinterop.staticCFunction
 import org.guiVista.core.fetchEmptyDataPointer
 import org.guiVista.gui.GuiApplication
 import org.guiVista.gui.layout.Container
 import org.guiVista.gui.layout.boxLayout
 import org.guiVista.gui.widget.display.statusBarWidget
 import org.guiVista.gui.widget.textEditor.textViewWidget
-import org.guiVista.gui.widget.tool.ToolBar
 import org.guiVista.gui.widget.tool.item.ToolButton
 import org.guiVista.gui.widget.tool.item.toolButtonWidget
 import org.guiVista.gui.widget.tool.toolBarWidget
@@ -65,16 +64,14 @@ internal class MainWindow(app: GuiApplication) : AppWindow(app) {
 
     private fun createStatusBar() = statusBarWidget { push(0u, "Ready") }
 
-    private fun createToolbar(): ToolBar {
-        val toolBar = toolBarWidget {}
-        val newItem = toolButtonWidget(label = "New", iconWidget = null) {}
-        val openItem = toolButtonWidget(label = "Open", iconWidget = null) {}
-        val saveItem = toolButtonWidget(label = "Save", iconWidget = null) {}
+    private fun createToolbar() = toolBarWidget {
+        val newItem = toolButtonWidget(label = "New", iconWidget = null)
+        val openItem = toolButtonWidget(label = "Open", iconWidget = null)
+        val saveItem = toolButtonWidget(label = "Save", iconWidget = null)
         val toolItems = arrayOf(newItem, openItem, saveItem)
 
         setupToolButtonEvents(openItem, newItem, saveItem)
-        toolItems.forEach { toolBar.insert(it, -1) }
-        return toolBar
+        toolItems.forEach { insert(it, -1) }
     }
 
     private fun setupToolButtonEvents(openItem: ToolButton, newItem: ToolButton, saveItem: ToolButton) {
@@ -84,27 +81,16 @@ internal class MainWindow(app: GuiApplication) : AppWindow(app) {
     }
 }
 
-private fun saveFile(@Suppress("UNUSED_PARAMETER") userData: COpaquePointer?): COpaquePointer? {
-    initRuntimeIfNeeded()
-    writeTextToFile(Controller.fetchFilePath(), Controller.fetchTxtBuffer())
-    Controller.runOnUiThread(staticCFunction{ _: COpaquePointer? ->
-        Controller.mainWin.updateStatusBar("File saved")
-        Controller.mainWin.resetFocus()
-        FALSE
-    })
-    return null
-}
-
 private fun saveItemClicked(
     @Suppress("UNUSED_PARAMETER") toolBtn: CPointer<GtkToolButton>?,
     @Suppress("UNUSED_PARAMETER") userData: gpointer
 ) {
-    val filePath = Controller.fetchFilePath()
+    val filePath = Controller.filePath
     if (filePath.isEmpty()) {
         Controller.showSaveDialog(Controller.mainWin, Controller.mainWin.buffer)
     } else {
         Controller.mainWin.updateStatusBar("Saving $filePath...")
-        Controller.changeTxtBuffer(Controller.textFromTextBuffer(Controller.mainWin.buffer).freeze())
+        Controller.txtBuffer = Controller.textFromTextBuffer(Controller.mainWin.buffer).freeze()
         Controller.runOnBackgroundThread(staticCFunction(::saveFile))
     }
 }
@@ -120,11 +106,5 @@ fun newItemClicked(
     @Suppress("UNUSED_PARAMETER") toolBtn: CPointer<GtkToolButton>?,
     @Suppress("UNUSED_PARAMETER") userData: gpointer
 ) {
-    with(Controller.mainWin) {
-        title = "KPad"
-        buffer.changeText("")
-        Controller.clearFilePath()
-        updateStatusBar("Ready")
-        resetFocus()
-    }
+    Controller.newFile()
 }
