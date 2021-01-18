@@ -46,6 +46,7 @@ internal class MainWindow(app: GuiApplication) : AppWindow(app) {
 
     override fun createMainLayout(): Container = boxLayout(orientation = GtkOrientation.GTK_ORIENTATION_VERTICAL) {
         spacing = 5
+        prependChild(createMenuBar())
         prependChild(toolBar)
         prependChild(child = createScrolledWindow(), fill = true, expand = true)
         appendChild(statusBar)
@@ -85,21 +86,14 @@ private fun saveItemClicked(
     @Suppress("UNUSED_PARAMETER") toolBtn: CPointer<GtkToolButton>?,
     @Suppress("UNUSED_PARAMETER") userData: gpointer
 ) {
-    val filePath = Controller.filePath
-    if (filePath.isEmpty()) {
-        Controller.showSaveDialog(Controller.mainWin, Controller.mainWin.buffer)
-    } else {
-        Controller.mainWin.updateStatusBar("Saving $filePath...")
-        Controller.txtBuffer = Controller.textFromTextBuffer(Controller.mainWin.buffer).freeze()
-        Controller.runOnBackgroundThread(staticCFunction(::saveFile))
-    }
+    Controller.saveFile()
 }
 
 private fun openItemClicked(
     @Suppress("UNUSED_PARAMETER") toolBtn: CPointer<GtkToolButton>?,
     @Suppress("UNUSED_PARAMETER") userData: gpointer
 ) {
-    Controller.showOpenDialog(Controller.mainWin)
+    Controller.openFile()
 }
 
 fun newItemClicked(

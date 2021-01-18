@@ -46,7 +46,7 @@ internal object Controller {
         if (resp == GTK_RESPONSE_ACCEPT) {
             _filePath.value = dialog.fetchFileName().freeze()
             mainWin.updateStatusBar("Opening ${_filePath.value}...")
-            runOnBackgroundThread(staticCFunction(::openFile))
+            runOnBackgroundThread(staticCFunction(::runOpenFileTask))
         }
         dialog.close()
     }
@@ -68,7 +68,7 @@ internal object Controller {
             _filePath.value = dialog.fetchFileName().freeze()
             mainWin.updateStatusBar("Saving ${_filePath.value}...")
             _txtBuffer.value = textFromTextBuffer(buffer).freeze()
-            runOnBackgroundThread(staticCFunction(::saveFile))
+            runOnBackgroundThread(staticCFunction(::runSaveFileTask))
         }
         dialog.close()
     }
@@ -114,6 +114,21 @@ internal object Controller {
         }
         mainWin.addAccelGroup(accelGroup)
     }
+
+    fun saveFile() {
+        val filePath = Controller.filePath
+        if (filePath.isEmpty()) {
+            showSaveDialog(mainWin, mainWin.buffer)
+        } else {
+            mainWin.updateStatusBar("Saving $filePath...")
+            txtBuffer = textFromTextBuffer(mainWin.buffer).freeze()
+            runOnBackgroundThread(staticCFunction(::runSaveFileTask))
+        }
+    }
+
+    fun openFile() {
+        showOpenDialog(mainWin)
+    }
 }
 
 internal fun AcceleratorGroup.registerKeyboardShortcut(
@@ -129,7 +144,7 @@ internal fun AcceleratorGroup.registerKeyboardShortcut(
     )
 }
 
-private fun openFile(@Suppress("UNUSED_PARAMETER") userData: COpaquePointer?): COpaquePointer? {
+private fun runOpenFileTask(@Suppress("UNUSED_PARAMETER") userData: COpaquePointer?): COpaquePointer? {
     initRuntimeIfNeeded()
     _txtBuffer.value = readTextFile(_filePath.value).freeze()
     Controller.runOnUiThread(staticCFunction { _: COpaquePointer? ->
@@ -142,7 +157,7 @@ private fun openFile(@Suppress("UNUSED_PARAMETER") userData: COpaquePointer?): C
     return null
 }
 
-internal fun saveFile(@Suppress("UNUSED_PARAMETER") userData: COpaquePointer?): COpaquePointer? {
+private fun runSaveFileTask(@Suppress("UNUSED_PARAMETER") userData: COpaquePointer?): COpaquePointer? {
     initRuntimeIfNeeded()
     writeTextToFile(_filePath.value, _txtBuffer.value)
     Controller.runOnUiThread(staticCFunction { _: COpaquePointer? ->
@@ -166,7 +181,7 @@ private fun saveFileKeyPressed(@Suppress("UNUSED_PARAMETER") ptr: COpaquePointer
     } else {
         Controller.mainWin.updateStatusBar("Saving $filePath...")
         Controller.txtBuffer = Controller.textFromTextBuffer(Controller.mainWin.buffer).freeze()
-        Controller.runOnBackgroundThread(staticCFunction(::saveFile))
+        Controller.runOnBackgroundThread(staticCFunction(::runSaveFileTask))
     }
 }
 
