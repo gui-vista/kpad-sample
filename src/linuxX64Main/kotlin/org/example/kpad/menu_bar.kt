@@ -34,6 +34,12 @@ private val quitItem by lazy {
         connectActivateSignal(staticCFunction(::quitItemActivated), fetchEmptyDataPointer())
     }
 }
+private val aboutItem by lazy {
+    menuItem {
+        label = "About"
+        connectActivateSignal(staticCFunction(::aboutItemActivated), fetchEmptyDataPointer())
+    }
+}
 
 private fun createFileMenu() = menuWidget {
     add(newItem)
@@ -42,7 +48,7 @@ private fun createFileMenu() = menuWidget {
     add(quitItem)
 }
 
-private fun createHelpMenu() = menuWidget { add(menuItem { label = "About" }) }
+private fun createHelpMenu() = menuWidget { add(aboutItem) }
 
 internal fun createMenuBar() = menuBarWidget {
     val fileItem = menuItem {
@@ -56,6 +62,12 @@ internal fun createMenuBar() = menuBarWidget {
     append(fileItem)
     append(helpItem)
 }
+
+@Suppress("UNUSED_PARAMETER")
+private fun aboutItemActivated(menuItem: CPointer<GtkMenuItem>, userData: gpointer) {
+    Controller.showAboutDialog()
+}
+
 
 @Suppress("UNUSED_PARAMETER")
 private fun quitItemActivated(menuItem: CPointer<GtkMenuItem>, userData: gpointer) {

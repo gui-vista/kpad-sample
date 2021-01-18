@@ -6,6 +6,7 @@ import glib2.*
 import gtk3.*
 import kotlinx.cinterop.*
 import org.guiVista.gui.dialog.fileChooserDialog
+import org.guiVista.gui.dialog.messageDialog
 import org.guiVista.gui.keyboard.AcceleratorGroup
 import org.guiVista.gui.text.TextBuffer
 import org.guiVista.gui.text.TextBufferIterator
@@ -38,6 +39,13 @@ internal object Controller {
         buffer.fetchStartIterator(start)
         buffer.fetchEndIterator(end)
         return buffer.fetchText(start = start, end = end, includeHiddenChars = false)
+    }
+
+    fun showAboutDialog() {
+        val msg = "KPad - A desktop application written using Kotlin & GUI Vista."
+        val dialog = messageDialog(parent = mainWin, type = GtkMessageType.GTK_MESSAGE_INFO, messageFormat = msg)
+        dialog.run()
+        dialog.close()
     }
 
     fun showOpenDialog(parent: WindowBase) {

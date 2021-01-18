@@ -19,7 +19,6 @@ import org.guiVista.gui.widget.tool.item.toolButtonWidget
 import org.guiVista.gui.widget.tool.toolBarWidget
 import org.guiVista.gui.window.AppWindow
 import org.guiVista.gui.window.ScrolledWindow
-import kotlin.native.concurrent.freeze
 
 internal class MainWindow(app: GuiApplication) : AppWindow(app) {
     private val editor by lazy { createEditor() }
